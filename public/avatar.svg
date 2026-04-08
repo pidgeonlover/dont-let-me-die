@@ -1,0 +1,44 @@
+<svg width="640" height="640" viewBox="0 0 640 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#2a2a2a"/>
+      <stop offset="100%" stop-color="#0a0a0a"/>
+    </radialGradient>
+    <radialGradient id="skin" cx="50%" cy="35%" r="40%">
+      <stop offset="0%" stop-color="#d4a984"/>
+      <stop offset="100%" stop-color="#b8895e"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="50%">
+      <stop offset="60%" stop-color="transparent"/>
+      <stop offset="100%" stop-color="#0a0a0a" stop-opacity="0.7"/>
+    </radialGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="640" height="640" fill="url(#bg)"/>
+  <!-- Shoulders -->
+  <ellipse cx="320" cy="620" rx="200" ry="120" fill="#1a1a1a"/>
+  <!-- Neck -->
+  <rect x="285" y="420" width="70" height="80" rx="20" fill="url(#skin)"/>
+  <!-- Head -->
+  <ellipse cx="320" cy="300" rx="120" ry="145" fill="url(#skin)"/>
+  <!-- Hair -->
+  <ellipse cx="320" cy="220" rx="130" ry="120" fill="#1a1010"/>
+  <ellipse cx="200" cy="300" rx="30" ry="100" fill="#1a1010"/>
+  <ellipse cx="440" cy="300" rx="30" ry="100" fill="#1a1010"/>
+  <!-- Eyes -->
+  <ellipse cx="280" cy="310" rx="14" ry="10" fill="#1a1010"/>
+  <ellipse cx="360" cy="310" rx="14" ry="10" fill="#1a1010"/>
+  <circle cx="283" cy="308" r="3" fill="#e8e4de" opacity="0.6"/>
+  <circle cx="363" cy="308" r="3" fill="#e8e4de" opacity="0.6"/>
+  <!-- Eyebrows -->
+  <path d="M258 290 Q280 280 300 288" stroke="#1a1010" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M340 288 Q360 280 382 290" stroke="#1a1010" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Nose -->
+  <path d="M315 330 Q320 345 325 330" stroke="#a07850" stroke-width="1.5" fill="none"/>
+  <!-- Mouth -->
+  <path d="M295 365 Q320 375 345 365" stroke="#a07850" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Vignette overlay -->
+  <rect width="640" height="640" fill="url(#vignette)"/>
+  <!-- Placeholder text -->
+  <text x="320" y="590" text-anchor="middle" font-family="serif" font-size="14" fill="#555" letter-spacing="2">PLACEHOLDER PORTRAIT</text>
+</svg>
