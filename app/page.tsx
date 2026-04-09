@@ -4,7 +4,7 @@ import { GraveyardCounter } from "@/components/GraveyardCounter";
 import { MyStory } from "@/components/MyStory";
 import { SurvivalLog } from "@/components/SurvivalLog";
 import { BucketList } from "@/components/BucketList";
-import { GoalsSection } from "@/components/GoalsSection";
+import { Milestones } from "@/components/Milestones";
 import { JournalSection } from "@/components/JournalSection";
 import { DonorsWall } from "@/components/DonorsWall";
 import { RulesSection } from "@/components/RulesSection";
@@ -26,7 +26,7 @@ export default function Home() {
         caption="I chose this face. I chose this name. I did not choose the rule."
       />
       <BucketList />
-      <GoalsSection />
+      <Milestones />
       <JournalSection />
       <DonorsWall />
       <RulesSection />

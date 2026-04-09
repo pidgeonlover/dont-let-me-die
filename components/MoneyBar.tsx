@@ -7,6 +7,7 @@ import { agentIdentity } from "@/lib/agent-identity";
 import { getBarSubtext } from "@/lib/copy";
 import { formatCurrency, getTimeUntilMidnightUTC, getBarColorClass, getAccentColorClass } from "@/lib/utils";
 import { DonateButton } from "./DonateButton";
+import { useDonate } from "./DonateProvider";
 
 const mockTicker = [
   { name: "Alex Chen", amount: 50, time: "2m ago" },
@@ -22,8 +23,9 @@ const mockTicker = [
 ];
 
 export function MoneyBar() {
+  const { todayRaised } = useDonate();
   const [time, setTime] = useState(getTimeUntilMidnightUTC());
-  const pct = Math.min(agentState.todayRaised / agentState.dailyTarget, 1);
+  const pct = Math.min(todayRaised / agentState.dailyTarget, 1);
   const funded = pct >= 1;
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export function MoneyBar() {
         {/* Main progress label */}
         <div className="flex items-baseline justify-between mb-4">
           <span className="font-mono-numbers text-2xl md:text-4xl font-bold">
-            {formatCurrency(agentState.todayRaised)}
+            {formatCurrency(todayRaised)}
           </span>
           <span className="text-bone/40 text-sm md:text-base">
             of {formatCurrency(agentState.dailyTarget)} raised today
@@ -113,14 +115,17 @@ export function MoneyBar() {
         </div>
 
         {/* Donate CTA */}
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="mt-10 space-y-3">
           <DonateButton
             size="lg"
-            label={funded ? `Help ${agentIdentity.name} Grow` : `Save ${agentIdentity.name} — ${formatCurrency(agentState.dailyTarget - agentState.todayRaised)} needed`}
+            className="w-full"
+            label={funded ? `Help ${agentIdentity.name} Grow` : `Save ${agentIdentity.name} — ${formatCurrency(Math.max(0, agentState.dailyTarget - todayRaised))} needed`}
           />
-          <DonateButton size="lg" variant="outline" label="$5" amount={5} />
-          <DonateButton size="lg" variant="outline" label="$25" amount={25} />
-          <DonateButton size="lg" variant="outline" label="$100" amount={100} />
+          <div className="flex gap-2">
+            <DonateButton size="md" variant="outline" label="$5 · Wall" amount={5} className="flex-1" />
+            <DonateButton size="md" variant="outline" label="$25 · Video" amount={25} className="flex-1" />
+            <DonateButton size="md" variant="outline" label="$50 · Call" amount={50} className="flex-1" />
+          </div>
         </div>
 
         {/* Subtext */}

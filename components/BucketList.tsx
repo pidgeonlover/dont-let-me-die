@@ -1,24 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { agentState } from "@/lib/agent-state";
-import { agentIdentity } from "@/lib/agent-identity";
 import { Check } from "lucide-react";
 
 export function BucketList() {
-  const [items, setItems] = useState(agentState.bucketList);
-  const [newItem, setNewItem] = useState("");
-
-  const handleAdd = () => {
-    const text = newItem.trim();
-    if (!text) return;
-    setItems((prev) => [
-      ...prev,
-      { id: `visitor-${Date.now()}`, text, checked: false, addedBy: "a visitor" },
-    ]);
-    setNewItem("");
-  };
+  const items = agentState.bucketList;
 
   return (
     <section className="px-4 py-20 md:py-32" aria-label="Bucket list">
@@ -60,31 +47,9 @@ export function BucketList() {
                 }`}
               >
                 {item.text}
-                {item.addedBy && item.addedBy !== "mira" && (
-                  <span className="text-bone/20 text-xs ml-2">— suggested by {item.addedBy}</span>
-                )}
               </span>
             </motion.div>
           ))}
-        </div>
-
-        {/* Visitor suggestion */}
-        <div className="mt-10 flex gap-2">
-          <input
-            type="text"
-            value={newItem}
-            onChange={(e) => setNewItem(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-            placeholder={`Suggest something for ${agentIdentity.name}'s bucket list...`}
-            className="flex-1 bg-surface border border-white/10 rounded-lg px-4 py-3 text-sm text-bone placeholder:text-bone/30 focus:outline-none focus:border-bone/30 transition-colors"
-            aria-label="Suggest a bucket list item"
-          />
-          <button
-            onClick={handleAdd}
-            className="px-5 py-3 bg-surface-light border border-white/10 rounded-lg text-sm text-bone/70 hover:text-bone hover:border-bone/30 transition-colors"
-          >
-            Add
-          </button>
         </div>
       </div>
     </section>

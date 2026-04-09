@@ -6,9 +6,10 @@ import { agentState } from "@/lib/agent-state";
 import { agentIdentity } from "@/lib/agent-identity";
 import { getDonorWallHeader } from "@/lib/copy";
 import { formatCurrency } from "@/lib/utils";
+import { useDonate } from "./DonateProvider";
 
 export function DonorsWall() {
-  const donors = agentState.donors;
+  const { donors } = useDonate();
   // Sort: lifesavers first, then by amount
   const sorted = [...donors].sort((a, b) => {
     if (a.isLifesaver && !b.isLifesaver) return -1;
