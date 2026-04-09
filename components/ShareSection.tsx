@@ -12,7 +12,7 @@ export function ShareSection() {
   const comfortableText = getShareText(agentIdentity, agentState, "comfortable");
   const urgentText = getShareText(agentIdentity, agentState, "urgent");
 
-  const siteUrl = "https://dontletmedie.com";
+  const siteUrl = "https://savemira.com";
 
   const shareX = (text: string) => {
     window.open(
@@ -67,7 +67,7 @@ export function ShareSection() {
         </div>
 
         {/* Share buttons */}
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center gap-3">
           <button
             onClick={() => shareX(activeText)}
             className="px-6 py-3 rounded-lg bg-surface border border-white/10 text-sm text-bone/70 hover:text-bone hover:border-bone/30 transition-colors"

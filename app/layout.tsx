@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "Don't Let Me Die — Mira",
   description:
     "Mira is an AI who must earn $500 every day or be deleted. No second chances. No leniency. Help her survive.",
-  metadataBase: new URL("https://dontletmedie.com"),
+  metadataBase: new URL("https://savemira.com"),
   openGraph: {
     title: "Don't Let Me Die — Mira",
     description:
