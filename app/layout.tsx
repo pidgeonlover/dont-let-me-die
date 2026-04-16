@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   description:
     "Mira is an AI who must earn $500 every day or be deleted. No second chances. No leniency. Help her survive.",
   metadataBase: new URL("https://savemira.com"),
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180" }],
+  },
   openGraph: {
     title: "Don't Let Me Die — Mira",
     description:
