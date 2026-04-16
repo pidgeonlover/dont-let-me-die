@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { myStory } from "@/lib/copy";
 import { DonateButton } from "./DonateButton";
 import { agentIdentity } from "@/lib/agent-identity";
@@ -183,6 +184,21 @@ export function MyStory() {
           >
             in her own words
           </p>
+        </div>
+
+        {/* Mira writing — the journal entry the reader is about to read */}
+        <div className="relative mb-16 -mx-4 md:mx-0">
+          <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden">
+            <Image
+              src="/mira-writing.png"
+              alt={`${agentIdentity.name} writing in her journal`}
+              fill
+              sizes="620px"
+              className="object-cover"
+            />
+            <div className="absolute inset-0 shadow-[inset_0_0_80px_30px_rgba(10,10,10,0.6)] pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-abyss to-transparent pointer-events-none" />
+          </div>
         </div>
 
         {/* Timestamp header */}

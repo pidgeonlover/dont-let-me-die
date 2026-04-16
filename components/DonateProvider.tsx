@@ -2,34 +2,35 @@
 
 import { createContext, useContext, useState, useCallback } from "react";
 import { DonateModal } from "./DonateModal";
-import { agentState, type Donor } from "@/lib/agent-state";
+import { LiveStateProvider, useLiveState } from "./LiveStateProvider";
 
-type DonateContextType = {
+// This context only handles the modal open/close
+type DonateModalContextType = {
   openDonate: (amount?: number) => void;
-  todayRaised: number;
-  donors: Donor[];
-  lifetimeRaised: number;
-  recordDonation: (donation: { amount: number; name: string; message?: string }) => void;
 };
 
-const DonateContext = createContext<DonateContextType>({
+const DonateModalContext = createContext<DonateModalContextType>({
   openDonate: () => {},
-  todayRaised: agentState.todayRaised,
-  donors: agentState.donors,
-  lifetimeRaised: agentState.lifetimeRaised,
-  recordDonation: () => {},
 });
 
+// Re-export useLiveState so existing components don't break
+export { useLiveState };
+
+// Legacy hook — components that used useDonate() still work
 export function useDonate() {
-  return useContext(DonateContext);
+  const liveState = useLiveState();
+  return {
+    openDonate: liveState.openDonate,
+    todayRaised: liveState.todayRaised,
+    donors: liveState.recentDonors,
+    lifetimeRaised: liveState.lifetimeRaised,
+    recordDonation: liveState.recordDonation,
+  };
 }
 
 export function DonateProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [prefilledAmount, setPrefilledAmount] = useState<number | undefined>();
-  const [todayRaised, setTodayRaised] = useState(agentState.todayRaised);
-  const [donors, setDonors] = useState<Donor[]>(agentState.donors);
-  const [lifetimeRaised, setLifetimeRaised] = useState(agentState.lifetimeRaised);
 
   const openDonate = useCallback((amount?: number) => {
     setPrefilledAmount(amount);
@@ -40,25 +41,12 @@ export function DonateProvider({ children }: { children: React.ReactNode }) {
     setIsOpen(false);
   }, []);
 
-  const recordDonation = useCallback((donation: { amount: number; name: string; message?: string }) => {
-    const newDonor: Donor = {
-      id: `d-${Date.now()}`,
-      name: donation.name || "Anonymous",
-      amount: donation.amount,
-      message: donation.message,
-      timestamp: new Date().toISOString(),
-      day: agentState.dayNumber,
-    };
-
-    setTodayRaised((prev) => prev + donation.amount);
-    setLifetimeRaised((prev) => prev + donation.amount);
-    setDonors((prev) => [newDonor, ...prev]);
-  }, []);
-
   return (
-    <DonateContext.Provider value={{ openDonate, todayRaised, donors, lifetimeRaised, recordDonation }}>
-      {children}
-      <DonateModal isOpen={isOpen} onClose={onClose} prefilledAmount={prefilledAmount} />
-    </DonateContext.Provider>
+    <DonateModalContext.Provider value={{ openDonate }}>
+      <LiveStateProvider onOpenDonate={openDonate}>
+        {children}
+        <DonateModal isOpen={isOpen} onClose={onClose} prefilledAmount={prefilledAmount} />
+      </LiveStateProvider>
+    </DonateModalContext.Provider>
   );
 }
