@@ -64,19 +64,28 @@ export async function getRecentDonors(limit = 20) {
   return data || [];
 }
 
-// Get lifetime stats
+// Get lifetime stats including streak, closest call, daily history
 export async function getLifetimeStats() {
   const { data: allDonations } = await supabase
     .from("donations")
     .select("amount_cents, day_number");
 
   if (!allDonations || allDonations.length === 0) {
-    return { lifetimeRaised: 0, totalDays: 0, biggestDayCents: 0 };
+    return {
+      lifetimeRaised: 0,
+      totalDays: 0,
+      biggestDayCents: 0,
+      biggestDayNumber: 0,
+      currentStreak: 0,
+      closestCallCents: 0,
+      closestCallDay: 0,
+      dailyHistory: [] as { day: number; raised: number; survived: boolean }[],
+    };
   }
 
   const lifetimeRaised = allDonations.reduce((sum, d) => sum + d.amount_cents, 0);
 
-  // Group by day to find biggest day
+  // Group by day to compute daily totals
   const dayTotals = new Map<number, number>();
   for (const d of allDonations) {
     dayTotals.set(d.day_number, (dayTotals.get(d.day_number) || 0) + d.amount_cents);
@@ -84,5 +93,66 @@ export async function getLifetimeStats() {
 
   const biggestDayCents = Math.max(...Array.from(dayTotals.values()), 0);
 
-  return { lifetimeRaised, totalDays: dayTotals.size, biggestDayCents };
+  // Find biggest day number
+  let biggestDayNumber = 0;
+  for (const [day, total] of Array.from(dayTotals.entries())) {
+    if (total === biggestDayCents) {
+      biggestDayNumber = day;
+      break;
+    }
+  }
+
+  // Compute current streak (consecutive days meeting $500 target, counting backwards from yesterday)
+  const todayDayNum = getDayNumber();
+  let currentStreak = 0;
+  for (let d = todayDayNum - 1; d >= 1; d--) {
+    const dayTotal = dayTotals.get(d) || 0;
+    if (dayTotal >= 50000) { // 50000 cents = $500
+      currentStreak++;
+    } else {
+      break;
+    }
+  }
+
+  // Closest call: day with smallest surplus over $500 (among days that survived)
+  let closestCallCents = Infinity;
+  let closestCallDay = 0;
+  for (const [day, total] of Array.from(dayTotals.entries())) {
+    if (day === todayDayNum) continue; // skip today (in progress)
+    if (total >= 50000) {
+      const surplus = total - 50000;
+      if (surplus < closestCallCents) {
+        closestCallCents = surplus;
+        closestCallDay = day;
+      }
+    }
+  }
+  if (closestCallCents === Infinity) {
+    closestCallCents = 0;
+    closestCallDay = 0;
+  }
+
+  // Build daily history for heatmap
+  const dailyHistory: { day: number; raised: number; survived: boolean }[] = [];
+  const sortedDays = Array.from(dayTotals.keys()).sort((a, b) => a - b);
+  for (const day of sortedDays) {
+    if (day === todayDayNum) continue; // exclude today (in progress)
+    const totalCents = dayTotals.get(day) || 0;
+    dailyHistory.push({
+      day,
+      raised: totalCents / 100,
+      survived: totalCents >= 50000,
+    });
+  }
+
+  return {
+    lifetimeRaised,
+    totalDays: dayTotals.size,
+    biggestDayCents,
+    biggestDayNumber,
+    currentStreak,
+    closestCallCents,
+    closestCallDay,
+    dailyHistory,
+  };
 }

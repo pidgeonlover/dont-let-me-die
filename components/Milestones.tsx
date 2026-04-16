@@ -3,9 +3,11 @@
 import { motion } from "framer-motion";
 import { getMilestones } from "@/lib/milestones";
 import { MilestoneCard, TimelineNode } from "./MilestoneCard";
+import { useLiveState } from "./LiveStateProvider";
 
 export function Milestones() {
-  const milestones = getMilestones();
+  const { dayNumber } = useLiveState();
+  const milestones = getMilestones(dayNumber);
 
   // Find the index of the current milestone to split the timeline line
   const currentIndex = milestones.findIndex((m) => m.status === "current");

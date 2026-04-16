@@ -13,6 +13,12 @@ export interface Lifesaver {
   dayNumber: number;
 }
 
+export interface DailyRecord {
+  day: number;
+  raised: number;
+  survived: boolean;
+}
+
 interface LiveState {
   dayNumber: number;
   todayRaised: number;
@@ -23,6 +29,13 @@ interface LiveState {
   lifesaver: Lifesaver | null;
   recentDonors: Donor[];
   lifetimeRaised: number;
+  currentStreak: number;
+  closestCall: number;
+  closestCallDay: number;
+  biggestDay: number;
+  biggestDayNumber: number;
+  dailyHistory: DailyRecord[];
+  totalDaysActive: number;
   // For state transitions
   prevTodayRaised: number;
 }
@@ -53,7 +66,7 @@ export function LiveStateProvider({
   onOpenDonate: (amount?: number) => void;
 }) {
   const [state, setState] = useState<LiveState>({
-    dayNumber: initialState?.dayNumber ?? 23,
+    dayNumber: initialState?.dayNumber ?? 1,
     todayRaised: initialState?.todayRaised ?? 0,
     dailyTarget: 500,
     isFunded: false,
@@ -62,6 +75,13 @@ export function LiveStateProvider({
     lifesaver: null,
     recentDonors: [],
     lifetimeRaised: initialState?.lifetimeRaised ?? 0,
+    currentStreak: 0,
+    closestCall: 0,
+    closestCallDay: 0,
+    biggestDay: 0,
+    biggestDayNumber: 0,
+    dailyHistory: [],
+    totalDaysActive: 0,
     prevTodayRaised: 0,
   });
 
@@ -90,6 +110,13 @@ export function LiveStateProvider({
           lifesaver: data.lifesaver,
           recentDonors: data.recentDonors || [],
           lifetimeRaised: data.lifetimeRaised,
+          currentStreak: data.currentStreak ?? 0,
+          closestCall: data.closestCall ?? 0,
+          closestCallDay: data.closestCallDay ?? 0,
+          biggestDay: data.biggestDay ?? 0,
+          biggestDayNumber: data.biggestDayNumber ?? 0,
+          dailyHistory: data.dailyHistory || [],
+          totalDaysActive: data.totalDaysActive ?? 0,
           prevTodayRaised: prev.todayRaised,
         };
       });

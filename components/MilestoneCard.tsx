@@ -1,17 +1,16 @@
 "use client";
 
 import { type Milestone } from "@/lib/milestones";
-import { agentState } from "@/lib/agent-state";
+import { useLiveState } from "./LiveStateProvider";
 import { Lock, Check } from "lucide-react";
 
+// Mira's start date
+const MIRA_START_DATE = "2026-03-15";
+
 function getUnlockDateString(day: number): string {
-  const start = new Date(agentState.startDate);
+  const start = new Date(MIRA_START_DATE);
   start.setDate(start.getDate() + day - 1);
   return start.toISOString().split("T")[0];
-}
-
-function getDaysUntil(day: number): number {
-  return Math.max(0, day - agentState.dayNumber);
 }
 
 export function MilestoneCard({
@@ -21,6 +20,9 @@ export function MilestoneCard({
   milestone: Milestone;
   side: "left" | "right";
 }) {
+  const { dayNumber } = useLiveState();
+  const daysUntil = Math.max(0, milestone.day - dayNumber);
+
   const { status } = milestone;
   const isLocked = status === "locked";
   const isCurrent = status === "current";
@@ -99,7 +101,7 @@ export function MilestoneCard({
               className="font-mono-numbers text-[11px] tracking-wide"
               style={{ color: "#f59e0b" }}
             >
-              in {getDaysUntil(milestone.day)} days
+              in {daysUntil} days
             </span>
           )}
           {isLocked && (

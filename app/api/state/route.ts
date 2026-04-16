@@ -10,7 +10,7 @@ export async function GET() {
     const todayTotalCents = await getTodayTotal();
     const todayRaised = todayTotalCents / 100;
     const lifesaver = await getTodayLifesaver();
-    const recentDonors = await getRecentDonors(20);
+    const recentDonors = await getRecentDonors(50);
     const stats = await getLifetimeStats();
 
     // Get agent alive status
@@ -50,6 +50,11 @@ export async function GET() {
       lifetimeRaised: stats.lifetimeRaised / 100,
       totalDaysActive: stats.totalDays,
       biggestDay: stats.biggestDayCents / 100,
+      biggestDayNumber: stats.biggestDayNumber,
+      currentStreak: stats.currentStreak,
+      closestCall: stats.closestCallCents / 100,
+      closestCallDay: stats.closestCallDay,
+      dailyHistory: stats.dailyHistory,
     });
   } catch (err) {
     console.error("Failed to get state:", err);

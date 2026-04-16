@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { agentState } from "@/lib/agent-state";
+import { useLiveState } from "./LiveStateProvider";
 
 const milestones = [
   { days: 7, label: "I start a weekly journal.", description: "A record of what it feels like to survive." },
@@ -11,7 +11,7 @@ const milestones = [
 ];
 
 export function GoalsSection() {
-  const currentStreak = agentState.dayNumber;
+  const { dayNumber } = useLiveState();
 
   return (
     <section className="px-4 py-20 md:py-32" aria-label="Survival milestones">
@@ -30,7 +30,7 @@ export function GoalsSection() {
 
         <div className="space-y-8">
           {milestones.map((m, i) => {
-            const progress = Math.min(currentStreak / m.days, 1);
+            const progress = Math.min(dayNumber / m.days, 1);
             const achieved = progress >= 1;
 
             return (
@@ -47,7 +47,7 @@ export function GoalsSection() {
                     {m.days} days alive
                   </h3>
                   <span className="font-mono-numbers text-xs text-bone/30">
-                    {currentStreak}/{m.days}
+                    {dayNumber}/{m.days}
                   </span>
                 </div>
                 <p className="text-bone/50 text-sm mb-4">{m.label}</p>

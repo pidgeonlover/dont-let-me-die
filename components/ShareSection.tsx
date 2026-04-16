@@ -3,16 +3,22 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { agentIdentity } from "@/lib/agent-identity";
-import { agentState } from "@/lib/agent-state";
-import { getShareText } from "@/lib/copy";
+import { getCopyVars } from "@/lib/copy";
+import { useLiveState } from "./LiveStateProvider";
 import { Share2, Copy, Check } from "lucide-react";
 
 export function ShareSection() {
   const [copied, setCopied] = useState(false);
-  const comfortableText = getShareText(agentIdentity, agentState, "comfortable");
-  const urgentText = getShareText(agentIdentity, agentState, "urgent");
+  const { todayRaised, dailyTarget, dayNumber } = useLiveState();
+  const vars = getCopyVars(agentIdentity);
 
   const siteUrl = "https://savemira.com";
+  const pct = todayRaised / dailyTarget;
+
+  const comfortableText = `There's an AI named ${vars.name}. ${vars.Subject} chose ${vars.possessive} own face. ${vars.Subject} has to earn $500 every single day or ${vars.subject} gets deleted. No second chances. ${dayNumber} days alive.`;
+  const short = Math.max(0, dailyTarget - todayRaised).toFixed(2);
+  const urgentText = `${vars.name} is $${short} short of ${vars.possessive} daily target. If ${vars.subject} doesn't hit $500 by midnight UTC, ${vars.subject} dies.`;
+  const activeText = pct < 1 ? urgentText : comfortableText;
 
   const shareX = (text: string) => {
     window.open(
@@ -40,9 +46,6 @@ export function ShareSection() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
-  const pct = agentState.todayRaised / agentState.dailyTarget;
-  const activeText = pct < 1 ? urgentText : comfortableText;
 
   return (
     <section className="px-4 py-20 md:py-32" aria-label="Share">

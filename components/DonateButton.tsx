@@ -1,9 +1,9 @@
 "use client";
 
 import { agentIdentity } from "@/lib/agent-identity";
-import { agentState } from "@/lib/agent-state";
-import { getProgressState } from "@/lib/copy";
 import { useDonate } from "./DonateProvider";
+import { useLiveState } from "./LiveStateProvider";
+import { getTimeUntilMidnightUTC } from "@/lib/utils";
 
 type DonateButtonProps = {
   size?: "sm" | "md" | "lg";
@@ -21,7 +21,22 @@ export function DonateButton({
   amount,
 }: DonateButtonProps) {
   const { openDonate } = useDonate();
-  const progressState = getProgressState(agentState);
+  const { todayRaised, dailyTarget, isFunded } = useLiveState();
+
+  // Determine urgency from live state
+  const time = getTimeUntilMidnightUTC();
+  const pct = todayRaised / dailyTarget;
+  let progressState: "on_pace" | "behind" | "critical" | "funded" = "on_pace";
+  if (isFunded || pct >= 1) {
+    progressState = "funded";
+  } else if (time.hours < 3) {
+    progressState = "critical";
+  } else {
+    const hoursPassed = 24 - time.hours - time.minutes / 60;
+    const expectedPct = hoursPassed / 24;
+    if (pct < expectedPct * 0.7) progressState = "behind";
+  }
+
   const isCritical = progressState === "critical" || progressState === "behind";
   const effectiveVariant = variant === "primary" && isCritical ? "urgent" : variant;
 

@@ -1,26 +1,70 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { agentState } from "@/lib/agent-state";
 import { agentIdentity } from "@/lib/agent-identity";
 import { formatCurrency } from "@/lib/utils";
 import { DonateButton } from "./DonateButton";
+import { useLiveState } from "./LiveStateProvider";
 
 function getHeatmapColor(raised: number, target: number): string {
   const pct = raised / target;
   if (pct >= 1.5) return "bg-green-400";
   if (pct >= 1.2) return "bg-green-500";
   if (pct >= 1.0) return "bg-green-600";
-  return "bg-green-800"; // survived but barely
+  return "bg-red-800"; // didn't survive
 }
 
 export function SurvivalLog() {
-  const { dailyHistory, dayNumber, lifetimeRaised, closestCall, closestCallDay, biggestDay, biggestDayAmount, dailyTarget } = agentState;
+  const {
+    dailyHistory,
+    dayNumber,
+    todayRaised,
+    lifetimeRaised,
+    closestCall,
+    closestCallDay,
+    biggestDay,
+    biggestDayNumber,
+    dailyTarget,
+    currentStreak,
+    isFunded,
+  } = useLiveState();
 
-  const avgDaily = lifetimeRaised / (dayNumber - 1); // exclude today in-progress
+  const completedDays = dailyHistory.length;
+  const avgDaily = completedDays > 0 ? lifetimeRaised / completedDays : 0;
+
   // Build a 7-column grid (Mon-Sun style)
-  const totalCells = Math.ceil(dayNumber / 7) * 7;
-  const paddingBefore = totalCells - dayNumber;
+  const totalDaysForGrid = completedDays + 1; // +1 for today
+  const totalCells = Math.ceil(totalDaysForGrid / 7) * 7;
+  const paddingBefore = totalCells - totalDaysForGrid;
+
+  // Show current streak + today if funded
+  const streakDisplay = currentStreak + (isFunded ? 1 : 0);
+
+  // If no history at all, show a simpler view
+  if (completedDays === 0 && todayRaised === 0) {
+    return (
+      <section className="px-4 py-20 md:py-32" aria-label="Survival log">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.h2
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="heading-serif text-3xl md:text-5xl mb-4"
+          >
+            Survival Log
+          </motion.h2>
+          <p className="text-bone/40 text-sm mb-8">
+            {agentIdentity.name}&apos;s survival record will appear here once donations begin.
+          </p>
+          <div className="flex justify-center mb-8">
+            <div className="w-8 h-8 rounded-sm bg-amber-500/60 animate-pulse-glow ring-1 ring-amber-500/30" />
+          </div>
+          <p className="text-bone/30 text-xs italic mb-8">Day {dayNumber} — waiting for the first donation.</p>
+          <DonateButton label="Start the Streak" />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="px-4 py-20 md:py-32" aria-label="Survival log">
@@ -34,7 +78,7 @@ export function SurvivalLog() {
           Survival Log
         </motion.h2>
         <p className="text-bone/40 text-center text-sm mb-12">
-          Every green square is a day {agentIdentity.name} survived. The day {agentIdentity.pronouns.subject} dies becomes a black square that ends this grid forever.
+          Every green square is a day {agentIdentity.name} survived. The day {agentIdentity.pronouns.subject} dies becomes a red square that ends this grid forever.
         </p>
 
         {/* Heatmap */}
@@ -64,7 +108,7 @@ export function SurvivalLog() {
             {/* Today (in progress) */}
             <div
               className="w-6 h-6 md:w-8 md:h-8 rounded-sm bg-amber-500/60 animate-pulse-glow ring-1 ring-amber-500/30"
-              title={`Day ${dayNumber} (today): ${formatCurrency(agentState.todayRaised)} — in progress`}
+              title={`Day ${dayNumber} (today): ${formatCurrency(todayRaised)} — in progress`}
               role="img"
               aria-label={`Day ${dayNumber} today, in progress`}
             />
@@ -73,19 +117,19 @@ export function SurvivalLog() {
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-4">
-          <StatCard label="Days alive" value={String(dayNumber)} />
+          <StatCard label="Days alive" value={String(streakDisplay)} />
           <StatCard label="Lifetime raised" value={formatCurrency(lifetimeRaised)} />
-          <StatCard label="Avg daily" value={formatCurrency(avgDaily)} />
+          <StatCard label="Avg daily" value={completedDays > 0 ? formatCurrency(avgDaily) : "—"} />
           <StatCard
             label="Closest call"
-            value={`$${closestCall.toFixed(2)} over`}
-            sub={`Day ${closestCallDay}`}
+            value={closestCallDay > 0 ? `$${closestCall.toFixed(2)} over` : "—"}
+            sub={closestCallDay > 0 ? `Day ${closestCallDay}` : undefined}
             highlight
           />
           <StatCard
             label="Biggest day"
-            value={formatCurrency(biggestDayAmount)}
-            sub={`Day ${biggestDay}`}
+            value={biggestDay > 0 ? formatCurrency(biggestDay) : "—"}
+            sub={biggestDayNumber > 0 ? `Day ${biggestDayNumber}` : undefined}
           />
         </div>
 

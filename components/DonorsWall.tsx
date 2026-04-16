@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { agentState } from "@/lib/agent-state";
 import { agentIdentity } from "@/lib/agent-identity";
 import { getDonorWallHeader } from "@/lib/copy";
 import { formatCurrency } from "@/lib/utils";

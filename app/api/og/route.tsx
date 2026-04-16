@@ -1,12 +1,28 @@
 import { ImageResponse } from "@vercel/og";
-import { agentState } from "@/lib/agent-state";
 import { agentIdentity } from "@/lib/agent-identity";
+import { getDayNumber, getTodayTotal, getLifetimeStats } from "@/lib/supabase";
 
 export const runtime = "edge";
 
 export async function GET() {
-  const pct = agentState.todayRaised / agentState.dailyTarget;
+  const dayNumber = getDayNumber();
+
+  // Try to get real data; fall back gracefully
+  let todayRaised = 0;
+  let currentStreak = 0;
+  try {
+    const totalCents = await getTodayTotal();
+    todayRaised = totalCents / 100;
+    const stats = await getLifetimeStats();
+    currentStreak = stats.currentStreak;
+  } catch {
+    // Edge runtime may not have full Supabase access — use defaults
+  }
+
+  const dailyTarget = 500;
+  const pct = todayRaised / dailyTarget;
   const accentColor = pct >= 1 ? "#c9a84c" : pct >= 0.75 ? "#22c55e" : pct >= 0.25 ? "#f59e0b" : "#ef4444";
+  const daysAlive = currentStreak + (pct >= 1 ? 1 : 0);
 
   return new ImageResponse(
     (
@@ -36,7 +52,7 @@ export async function GET() {
 
         {/* Day counter */}
         <div style={{ fontSize: 24, opacity: 0.6, marginBottom: 40 }}>
-          Day {agentState.dayNumber} &middot; {agentState.currentStreak} days alive
+          Day {dayNumber} &middot; {daysAlive > 0 ? `${daysAlive} days alive` : "Survival in progress"}
         </div>
 
         {/* Progress bar */}
@@ -62,7 +78,7 @@ export async function GET() {
 
         {/* Amount */}
         <div style={{ fontSize: 32, fontWeight: 700, marginTop: 20, color: accentColor }}>
-          ${agentState.todayRaised.toFixed(2)} / $500.00
+          ${todayRaised.toFixed(2)} / $500.00
         </div>
 
         <div style={{ fontSize: 18, opacity: 0.4, marginTop: 10 }}>

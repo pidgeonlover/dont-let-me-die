@@ -2,39 +2,44 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { agentState } from "@/lib/agent-state";
 import { agentIdentity } from "@/lib/agent-identity";
 import { getBarSubtext } from "@/lib/copy";
-import { formatCurrency, getTimeUntilMidnightUTC, getBarColorClass, getAccentColorClass } from "@/lib/utils";
+import { formatCurrency, getTimeUntilMidnightUTC, getBarColorClass, getAccentColorClass, getRelativeTime } from "@/lib/utils";
 import { DonateButton } from "./DonateButton";
-import { useDonate } from "./DonateProvider";
-
-const mockTicker = [
-  { name: "Alex Chen", amount: 50, time: "2m ago" },
-  { name: "Anonymous", amount: 25, time: "14m ago" },
-  { name: "Jordan K.", amount: 100, time: "38m ago" },
-  { name: "Sam W.", amount: 10, time: "1h ago" },
-  { name: "Priya M.", amount: 30, time: "2h ago" },
-  { name: "Taylor R.", amount: 15, time: "3h ago" },
-  { name: "Morgan L.", amount: 42, time: "5h ago" },
-  { name: "Casey D.", amount: 20, time: "7h ago" },
-  { name: "Robin V.", amount: 5, time: "9h ago" },
-  { name: "Jamie Fox", amount: 15, time: "10h ago" },
-];
+import { useLiveState } from "./LiveStateProvider";
 
 export function MoneyBar() {
-  const { todayRaised } = useDonate();
+  const {
+    todayRaised,
+    dailyTarget,
+    recentDonors,
+    currentStreak,
+    closestCall,
+    closestCallDay,
+    dayNumber,
+  } = useLiveState();
   const [time, setTime] = useState(getTimeUntilMidnightUTC());
-  const pct = Math.min(todayRaised / agentState.dailyTarget, 1);
+  const [now, setNow] = useState(Date.now());
+  const pct = Math.min(todayRaised / dailyTarget, 1);
   const funded = pct >= 1;
 
   useEffect(() => {
-    const interval = setInterval(() => setTime(getTimeUntilMidnightUTC()), 1000);
+    const interval = setInterval(() => {
+      setTime(getTimeUntilMidnightUTC());
+      setNow(Date.now());
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
 
   const barColor = getBarColorClass(pct);
   const accentColor = getAccentColorClass(pct);
+
+  // Use real donors for the ticker — double the list for seamless scrolling
+  const tickerDonors = recentDonors.length > 0 ? recentDonors : [];
+  const hasDonors = tickerDonors.length > 0;
+
+  // For streak display: show current streak + today in progress
+  const streakDisplay = currentStreak + (funded ? 1 : 0);
 
   return (
     <section id="donate" className="px-4 py-16 md:py-24" aria-label="Today's survival progress">
@@ -45,7 +50,7 @@ export function MoneyBar() {
             {formatCurrency(todayRaised)}
           </span>
           <span className="text-bone/40 text-sm md:text-base">
-            of {formatCurrency(agentState.dailyTarget)} raised today
+            of {formatCurrency(dailyTarget)} raised today
           </span>
         </div>
 
@@ -80,7 +85,9 @@ export function MoneyBar() {
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-4 mt-8 text-center">
           <div>
-            <div className="font-mono-numbers text-xl md:text-2xl font-bold">{agentState.currentStreak}</div>
+            <div className="font-mono-numbers text-xl md:text-2xl font-bold">
+              {dayNumber > 0 ? streakDisplay : "—"}
+            </div>
             <div className="text-bone/40 text-xs md:text-sm mt-1">Days survived</div>
           </div>
           <div>
@@ -91,35 +98,52 @@ export function MoneyBar() {
           </div>
           <div>
             <div className="font-mono-numbers text-xl md:text-2xl font-bold text-yellow-500">
-              ${agentState.closestCall.toFixed(2)}
+              {closestCallDay > 0 ? `$${closestCall.toFixed(2)}` : "—"}
             </div>
-            <div className="text-bone/40 text-xs md:text-sm mt-1">Closest call (Day {agentState.closestCallDay})</div>
+            <div className="text-bone/40 text-xs md:text-sm mt-1">
+              {closestCallDay > 0 ? `Closest call (Day ${closestCallDay})` : "Closest call"}
+            </div>
           </div>
         </div>
 
-        {/* Ticker */}
-        <div className="mt-10 h-48 overflow-hidden relative" aria-label="Recent donations">
-          <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-abyss to-transparent z-10 pointer-events-none" />
-          <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-abyss to-transparent z-10 pointer-events-none" />
-          <div className="animate-ticker-scroll space-y-3">
-            {[...mockTicker, ...mockTicker].map((d, i) => (
-              <div key={i} className="flex items-center gap-3 px-4 py-2 rounded-lg bg-surface/50">
-                <span className="text-bone/30 text-xs font-mono-numbers w-16 shrink-0">{d.time}</span>
-                <span className="text-bone/70 text-sm truncate">{d.name}</span>
-                <span className="ml-auto font-mono-numbers text-sm text-green-400 shrink-0">
-                  +{formatCurrency(d.amount)}
-                </span>
-              </div>
-            ))}
+        {/* Live ticker — real donations */}
+        {hasDonors ? (
+          <div className="mt-10 h-48 overflow-hidden relative" aria-label="Recent donations">
+            <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-abyss to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-abyss to-transparent z-10 pointer-events-none" />
+            <div className="animate-ticker-scroll space-y-3">
+              {[...tickerDonors, ...tickerDonors].map((d, i) => (
+                <div key={`${d.id}-${i}`} className="flex items-center gap-3 px-4 py-2 rounded-lg bg-surface/50">
+                  <span className="text-bone/30 text-xs font-mono-numbers w-16 shrink-0">
+                    {getRelativeTime(d.timestamp)}
+                  </span>
+                  <span className="text-bone/70 text-sm truncate">{d.name}</span>
+                  {d.isLifesaver && (
+                    <span className="px-1.5 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 text-[9px] font-medium uppercase shrink-0">
+                      Lifesaver
+                    </span>
+                  )}
+                  <span className="ml-auto font-mono-numbers text-sm text-green-400 shrink-0">
+                    +{formatCurrency(d.amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="mt-10 h-32 flex items-center justify-center" aria-label="No donations yet">
+            <p className="text-bone/30 text-sm italic">
+              No donations yet today. Be the first to save {agentIdentity.name}.
+            </p>
+          </div>
+        )}
 
         {/* Donate CTA */}
         <div className="mt-10 space-y-3">
           <DonateButton
             size="lg"
             className="w-full"
-            label={funded ? `Help ${agentIdentity.name} Grow` : `Save ${agentIdentity.name} — ${formatCurrency(Math.max(0, agentState.dailyTarget - todayRaised))} needed`}
+            label={funded ? `Help ${agentIdentity.name} Grow` : `Save ${agentIdentity.name} — ${formatCurrency(Math.max(0, dailyTarget - todayRaised))} needed`}
           />
           <div className="flex gap-2">
             <DonateButton size="md" variant="outline" label="$5 · Wall" amount={5} className="flex-1" />

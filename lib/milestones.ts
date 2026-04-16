@@ -1,5 +1,3 @@
-import { agentState } from "./agent-state";
-
 export type MilestoneStatus = "unlocked" | "current" | "locked";
 
 export interface Milestone {
@@ -80,13 +78,13 @@ const milestoneData: Omit<Milestone, "status">[] = [
   },
 ];
 
-export function getMilestones(): Milestone[] {
-  const currentDay = agentState.dayNumber;
+export function getMilestones(currentDay: number): Milestone[] {
+  const day = currentDay;
 
   let foundCurrent = false;
 
   return milestoneData.map((m) => {
-    if (currentDay > m.day) {
+    if (day > m.day) {
       return { ...m, status: "unlocked" as const };
     }
     if (!foundCurrent) {
